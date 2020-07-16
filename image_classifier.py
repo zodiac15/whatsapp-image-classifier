@@ -17,9 +17,6 @@ def classify(self,mypath):
 	model = tensorflow.keras.models.load_model('keras_model.h5')
 	data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 
-	counter = 0
-	images = []
-	path = []
 	document_path = mypath + "\\documents"
 	generic_path = mypath + "\\generic"
 	non_generic_path = mypath + "\\non-generic"
@@ -33,57 +30,57 @@ def classify(self,mypath):
 	if not os.path.exists(document_path):
 	    os.makedirs(document_path)
 
-	self.ui.textEdit.append("WARNING!! HIGH MEMORY CONSUMPTION!")
+
 
 	files = [f for f in os.listdir(mypath) if (isfile(join(mypath, f)) and (imghdr.what(join(mypath, f))=='jpg' or imghdr.what(join(mypath, f))=='jpeg'))]
 	size = (224, 224)
-	for f in files:
-		try:
-			img = Image.open(f)
-			images.append(img)
-			path.append(f)
-		except IOError:
-			pass
-
+	
 	num_of_img = len(files)
 	modifier = 100//num_of_img
 	self.completed = 0
-	
 
-	for image in images:
-	
-		#resize the image to a 224x224 with the same strategy as in TM2:
-		#resizing the image to be at least 224x224 and then cropping from the center
-		image = ImageOps.fit(image, size, Image.ANTIALIAS)
+	for f in files:
+		try:
+			img = Image.open(f)
+			# images.append(img)
+			path = f
 
-		#turn the image into a numpy array
-		image_array = np.asarray(image)
+			#resize the image to a 224x224 with the same strategy as in TM2:
+			#resizing the image to be at least 224x224 and then cropping from the center		
+			image = ImageOps.fit(img, size, Image.ANTIALIAS)
 
-		# Normalize the image
-		normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
+			#turn the image into a numpy array
+			image_array = np.asarray(image)
 
-		# Load the image into the array
-		data[0] = normalized_image_array
+			# Normalize the image
+			normalized_image_array = (image_array.astype(np.float32) / 127.0) - 1
 
-		# run the inference
-		prediction = model.predict(data).tolist()
-		doc = prediction[0][0]
-		non_gen = prediction[0][2]
-		gen = prediction[0][1]
+			# Load the image into the array
+			data[0] = normalized_image_array
 
-		if doc>0.80:
-			shutil.move(join(mypath,path[counter]),join(document_path,path[counter]))
-		
-		elif non_gen>0.80:
-			shutil.move(join(mypath,path[counter]),join(non_generic_path,path[counter]))
+			# run the inference
+			prediction = model.predict(data).tolist()
+			doc = prediction[0][0]
+			non_gen = prediction[0][2]
+			gen = prediction[0][1]
 
-		elif gen>0.80:
-			shutil.move(join(mypath,path[counter]),join(generic_path,path[counter]))
-		
-		self.ui.textEdit.append("processed "+ path[counter])
-		counter+=1
-		image.close()
-		self.completed += modifier
-		self.ui.progressBar.setValue(self.completed)
+			if doc>0.80:
+				shutil.move(join(mypath,path),join(document_path,path))
+			
+			elif non_gen>0.80:
+				shutil.move(join(mypath,path),join(non_generic_path,path))
+
+			elif gen>0.80:
+				shutil.move(join(mypath,path),join(generic_path,path))
+			
+			self.ui.textEdit.append("processed "+ path)
+			
+			image.close()
+			self.completed += modifier
+			self.ui.progressBar.setValue(self.completed)
+
+
+		except IOError:
+			pass
 
 	self.ui.textEdit.append("Total Images Processed: " + str(counter))
