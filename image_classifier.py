@@ -17,6 +17,8 @@ def classify(self,mypath):
 	model = tensorflow.keras.models.load_model('keras_model.h5')
 	data = np.ndarray(shape=(1, 224, 224, 3), dtype=np.float32)
 
+	counter = 0
+
 	document_path = mypath + "\\documents"
 	generic_path = mypath + "\\generic"
 	non_generic_path = mypath + "\\non-generic"
@@ -29,7 +31,6 @@ def classify(self,mypath):
 
 	if not os.path.exists(document_path):
 	    os.makedirs(document_path)
-
 
 
 	files = [f for f in os.listdir(mypath) if (isfile(join(mypath, f)) and (imghdr.what(join(mypath, f))=='jpg' or imghdr.what(join(mypath, f))=='jpeg'))]
@@ -74,7 +75,7 @@ def classify(self,mypath):
 				shutil.move(join(mypath,path),join(generic_path,path))
 			
 			self.ui.textEdit.append("processed "+ path)
-			
+			counter+=1
 			image.close()
 			self.completed += modifier
 			self.ui.progressBar.setValue(self.completed)
